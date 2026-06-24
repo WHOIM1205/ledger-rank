@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.error_handlers import register_error_handlers
 from app.api.router import api_router
 from app.db.database import init_db
+from app.db.seed import seed
 
 API_DESCRIPTION = """
 **LedgerRank** is a transaction ledger with:
@@ -41,8 +42,13 @@ tags_metadata = [
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Startup: create the schema (idempotent — no-op if it already exists).
+    # Startup: create the schema (idempotent — no-op if it already exists)...
     init_db()
+    # ...then ensure demo users exist. seed() is idempotent: it inserts a user
+    # only when missing, so it never duplicates and preserves existing data.
+    # Running it here (not only via `python -m app.db.seed`) guarantees the
+    # users exist on every boot, including Render's ephemeral redeploys.
+    seed()
     yield
     # Shutdown: nothing to tear down (engine/pool managed by SQLAlchemy).
 
