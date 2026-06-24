@@ -1,0 +1,20 @@
+# Render Blueprint for the LedgerRank backend.
+# Deploy: New + > Blueprint > point at this repo. Render reads this file.
+#
+# NOTE: Render's free tier filesystem is ephemeral — the SQLite data resets on
+# every deploy/restart. The startCommand re-seeds demo users so the live demo is
+# always populated. For durable storage, attach a Render Disk or use Postgres.
+
+services:
+  - type: web
+    name: ledgerrank-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: LEDGERRANK_DATABASE_URL
+        value: "sqlite:///./data/ledgerrank.db"
+      - key: PYTHON_VERSION
+        value: "3.12.0"
